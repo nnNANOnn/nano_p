@@ -12,7 +12,7 @@ Every instruction is 12 bits long. The decoder splits these bits into specific "
 
 
 ## HOW EACH INSTRUCTION EXECUTE
-1. MOVI R, d (Move Immediate)
+### 1. MOVI R, d (Move Immediate)
 Logic: $R \leftarrow d$
 Binary Format: 10 RRR 000 dddd
 -	Opcode Detection: The decoder sees 10 at bits 11-10 and identifies this as a "Load" operation. 
@@ -21,7 +21,7 @@ Binary Format: 10 RRR 000 dddd
 -	Execution: Finally, reg_write_en is set to 1, allowing the immediate value ($dddd$) to be written into register $R$ on the next clock pulse. 
 
 
-2. ADD Ra, Rb (Addition)
+### 2. ADD Ra, Rb (Addition)
 Logic: $Ra \leftarrow Ra + Rb$
 Binary Format: 00 RaRaRa RbRbRb 0000
 -	Opcode Detection: The decoder sees 00. 
@@ -31,7 +31,7 @@ Binary Format: 00 RaRaRa RbRbRb 0000
 -	Storage: reg_write_en is set to 1, and the new sum is stored back into $Ra$. 
 
 
-3. NEG R (2's Complement)
+### 3. NEG R (2's Complement)
 Logic: $R \leftarrow -R$ (Calculated as $0 - R$)
 Binary Format: 01 RRR 0000000
 -	Opcode Detection: The decoder sees 01. 
@@ -41,7 +41,7 @@ Binary Format: 01 RRR 0000000
 -	Storage: Like the ADD instruction, load_sel is 0 (ALU path), and reg_write_en is 1 to save the negative result back into register $R$. 
 
 
-4. JZR R, d (Jump if Zero)
+### 4. JZR R, d (Jump if Zero)
 Logic: If R == 0 then PC = d else PC = PC + 1
 Binary Format: 11 RRR 000 0ddd
 -	Opcode Detection: The decoder sees 11. 
