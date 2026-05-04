@@ -7,7 +7,8 @@ Port(A : in STD_LOGIC_VECTOR (3 downto 0);
          B : in STD_LOGIC_VECTOR (3 downto 0);
          C_in : in STD_LOGIC;
          S : out STD_LOGIC_VECTOR(3 DOWNTO 0);
-         C_out : out STD_LOGIC);
+         C_out : out STD_LOGIC
+         C_in_last: out STD_LOGIC);
 end RCA_4;
 
 architecture Behavioral of RCA_4 is
@@ -35,5 +36,6 @@ begin
     end generate FAs;
  
     C_out <= Carry_Out(3);
+    C_in_last <= Carry_In(3);
 
 end Behavioral;
