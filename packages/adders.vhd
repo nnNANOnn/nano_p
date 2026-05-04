@@ -20,7 +20,16 @@ package Adders is
                C_out : out STD_LOGIC);
     end component;
     
-        
+
+    component D_FF
+        Port( D :in STD_LOGIC;
+              Res : in STD_LOGIC;
+              Clk : in STD_LOGIC;
+              En : in STD_LOGIC;
+              Q : out STD_LOGIC;
+              Qbar : out STD_LOGIC);
+    end component;
+    
     component FA
         Port ( A : in STD_LOGIC;
            B : in STD_LOGIC;
