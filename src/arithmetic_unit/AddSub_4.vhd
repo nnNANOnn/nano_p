@@ -1,6 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use work.adders.RCA_4;
+use work.adders.all;
 
 entity Add_Sub_4_bit is
         Port(A_AS : in STD_LOGIC_VECTOR (3 DOWNTO 0);
@@ -16,27 +16,18 @@ architecture Behavioral of Add_Sub_4_bit is
 SIGNAL B_inter, S_inter: STD_LOGIC_VECTOR(3 DOWNTO 0);
 
 begin
+  B_inter <=B_AS xor ( CTRL & CTRL & CTRL & CTRL);[cite:1]
   RCA_4_0 : RCA_4
     port map(
         A => A_AS,
         B => B_inter,
         C_in => CTRL,
         S => S_inter,
-        C_out => OverFlow);
+        C_out => C_out_final,
+        C_in_last=>C_in_last_bit);
 
-  B_inter(0) <= B_AS(0) XOR CTRL; 
-  B_inter(1) <= B_AS(1) XOR CTRL;
-  B_inter(2) <= B_AS(2) XOR CTRL;
-  B_inter(3) <= B_AS(3) XOR CTRL;
-
-  process (S_inter)
-  begin
-    if S_inter = "0000" then
-      Zero <= '1';
-    else
-      Zero <= '0';
-    end if;
-  end process;
+ OverFlow <= C_in_last_bit XOR C_out_final;[cite:1]
+ Zero <= '1' when S_inter="0000" else '0';[cite:1]
 
   S_AS <= S_inter;
 
