@@ -8,7 +8,8 @@ package Adders is
             B : in STD_LOGIC_VECTOR (3 downto 0);
             C_in : in STD_LOGIC;
             S : out STD_LOGIC_VECTOR(3 DOWNTO 0);
-            C_out : out STD_LOGIC);
+            C_out : out STD_LOGIC;
+            C_in_last:out STD_LOGIC);
     end component;
     
     component RCA_3 is
