@@ -14,6 +14,8 @@ end Add_Sub_4_bit;
 architecture Behavioral of Add_Sub_4_bit is
 
 SIGNAL B_inter, S_inter: STD_LOGIC_VECTOR(3 DOWNTO 0);
+SIGNAL C_out_final:STD_LOGIC;
+SIGNAL C_in_last_bit:STD_LOGIC;
 
 begin
   B_inter <=B_AS xor ( CTRL & CTRL & CTRL & CTRL);[cite:1]
