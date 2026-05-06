@@ -1,0 +1,40 @@
+entity TB_HA is
+--  Port ( );
+end TB_HA;
+
+architecture Behavioral of TB_HA is
+
+COMPONENT HA
+    PORT(
+        A,B : in std_logic;
+        S,C : out std_logic
+    );
+END COMPONENT;
+
+SIGNAL a,b,s,c: std_logic;
+        
+
+begin
+UUT: HA PORT MAP(
+    A => a,
+    B => b,
+    C => c,
+    S => s
+    );
+process 
+BEGIN 
+    a <= '0';
+    b <= '0';
+    
+    WAIT FOR 100 ns;
+    a <= '1';
+    
+    WAIT FOR 100 ns;
+    b <= '1';
+    
+    WAIT FOR 100 ns;
+    a <= '0';
+    
+    WAIT;
+END PROCESS;
+end Behavioral;
