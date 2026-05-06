@@ -1,128 +1,67 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity TB_4_RCA is
---  Port ( );
+-- Testbench has no ports
 end TB_4_RCA;
 
 architecture Behavioral of TB_4_RCA is
-COMPONENT RCA_4 
-PORT(
-    A0, A1, A2, A3, B0, B1, B2, B3, C_in: IN STD_LOGIC; 
-    S0, S1, S2, S3, C_out: OUT STD_LOGIC); 
-END COMPONENT; 
-SIGNAL A0, A1, A2, A3, B0, B1, B2, B3, C_in, S0, S1, S2, S3, C_out: STD_LOGIC;
+
+    -- 1. Component declaration MUST match your RCA_4 entity exactly
+    COMPONENT RCA_4 
+    PORT(
+        A : IN STD_LOGIC_VECTOR(3 downto 0);
+        B : IN STD_LOGIC_VECTOR(3 downto 0);
+        C_in : IN STD_LOGIC;
+        S : OUT STD_LOGIC_VECTOR(3 downto 0);
+        C_out : OUT STD_LOGIC;
+        C_in_last : OUT STD_LOGIC -- Added to match your RCA_4 port
+    ); 
+    END COMPONENT; 
+
+    -- 2. Use Vectors for signals to match the component
+    SIGNAL A : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
+    SIGNAL B : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
+    SIGNAL S : STD_LOGIC_VECTOR(3 downto 0);
+    SIGNAL C_in, C_out, C_in_last : STD_LOGIC := '0';
 
 begin
-UUT: RCA_4 
 
-PORT MAP( 
-    A0 => A0, 
-    A1 => A1, 
-    A2 => A2, 
-    A3 => A3, 
-    B0 => B0, 
-    B1 => B1, 
-    B2 => B2, 
-    B3 => B3, 
-    C_in => C_in, 
-    S0 => S0, 
-    S1 => S1, 
-    S2 => S2, 
-    S3 => S3, 
-    C_out => C_out 
+    -- 3. Simplified Port Map
+    UUT: RCA_4 
+    PORT MAP( 
+        A => A, 
+        B => B, 
+        C_in => C_in, 
+        S => S, 
+        C_out => C_out,
+        C_in_last => C_in_last
     ); 
-PROCESS
-BEGIN
-   A0 <= '0'; 
-   A1 <= '1'; 
-   A2 <= '0'; 
-   A3 <= '1'; 
-   B0 <= '0'; 
-   B1 <= '0'; 
-   B2 <= '1'; 
-   B3 <= '0'; 
-   C_in <= '0'; 
-   WAIT FOR 100 ns; 
-   A0 <= '1'; 
-   A1 <= '1'; 
-   A2 <= '0'; 
-   A3 <= '0'; 
-   B0 <= '1'; 
-   B1 <= '0'; 
-   B2 <= '1'; 
-   B3 <= '0'; 
-   C_in <= '0'; 
-   WAIT FOR 100 ns; 
-   A0 <= '0'; 
-   A1 <= '1'; 
-   A2 <= '0'; 
-   A3 <= '1'; 
-   B0 <= '1'; 
-   B1 <= '0'; 
-   B2 <= '1'; 
-   B3 <= '1'; 
-   C_in <= '0'; 
-   WAIT FOR 100 ns; 
-   A0 <= '0'; 
-   A1 <= '1';
-    A2 <= '1'; 
-    A3 <= '1'; 
-    B0 <= '1'; 
-    B1 <= '1'; 
-    B2 <= '1'; 
-    B3 <= '1'; 
-    C_in <= '0'; 
-    WAIT FOR 100 ns; -- arbit 
-    A0 <= '0'; 
-    A1 <= '1'; 
-    A2 <= '0'; 
-    A3 <= '1'; 
-    B0 <= '1'; 
-    B1 <= '1'; 
-    B2 <= '1'; 
-    B3 <= '1'; 
-    C_in <= '0'; 
-    WAIT FOR 100 ns; 
-    A0 <= '0'; 
-    A1 <= '1'; 
-    A2 <= '1'; 
-    A3 <= '1'; 
-    B0 <= '1'; 
-    B1 <= '0'; 
-    B2 <= '1'; 
-    B3 <= '0'; 
-    C_in <= '0'; 
-    WAIT FOR 100 ns; 
-    A0 <= '1'; 
-    A1 <= '0'; 
-    A2 <= '1';
-    A3 <= '0'; 
-    B0 <= '1'; 
-    B1 <= '0'; 
-    B2 <= '1'; 
-    B3 <= '0'; 
-    C_in <= '0'; 
-    WAIT FOR 100 ns; 
-    A0 <= '1'; 
-    A1 <= '1'; 
-    A2 <= '1'; 
-    A3 <= '0'; 
-    B0 <= '1'; 
-    B1 <= '1'; 
-    B2 <= '1'; 
-    B3 <= '1'; 
-    C_in <= '0'; 
-    WAIT;  
+
+    -- 4. Stimulus Process (Converted your bit-by-bit values to Vectors)
+    PROCESS
+    BEGIN
+        -- Test 1: A="1010" (A3=1, A2=0, A1=1, A0=0), B="0100"
+        A <= "1010"; B <= "0100"; C_in <= '0';
+        WAIT FOR 100 ns; 
+        
+        -- Test 2: A="0011", B="0101"
+        A <= "0011"; B <= "0101"; C_in <= '0';
+        WAIT FOR 100 ns; 
+
+        -- Test 3: A="1010", B="1101"
+        A <= "1010"; B <= "1101"; C_in <= '0';
+        WAIT FOR 100 ns; 
+
+        -- Test 4: A="1110", B="1111"
+        A <= "1110"; B <= "1111"; C_in <= '0';
+        WAIT FOR 100 ns; 
+
+        -- Test 5: All 1s test
+        A <= "1111"; B <= "1111"; C_in <= '0';
+        WAIT FOR 100 ns; 
+
+        WAIT; -- Stops simulation
     END PROCESS;
 
 end Behavioral;
