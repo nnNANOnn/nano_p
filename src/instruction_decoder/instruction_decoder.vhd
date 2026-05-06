@@ -1,122 +1,145 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 01.05.2026 14:40:14
--- Design Name: 
--- Module Name: instruction_decoder - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
+-- Module : instruction_decoder
+-- Project: Nanoprocessor (Lab 9-10, CS1050)
+-- Role   : "Brain Surgeon" - the control unit of the 4-bit nanoprocessor
+--
+-- The decoder takes the 12-bit instruction fetched from Program ROM and a
+-- 4-bit "register-check" value (the value of the register selected on
+-- mux_a, used by JZR), and produces every control signal the datapath
+-- needs in one combinational sweep.
+--
+-- Instruction format (Table 1 of the lab):
+--   MOVI R,d   : 1 0 R R R 0 0 0 d d d d        opcode = 10
+--   ADD  Ra,Rb : 0 0 Ra Ra Ra Rb Rb Rb 0 0 0 0  opcode = 00
+--   NEG  R     : 0 1 R R R 0 0 0 0 0 0 0        opcode = 01
+--   JZR  R,d   : 1 1 R R R 0 0 0 0 d d d        opcode = 11
+--
+-- All control outputs are derived from instruction(11..10) (opcode) plus
+-- a few raw instruction bits, so the whole module is pure combinational
+-- logic with NO process and NO latches.
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
-
 
 entity instruction_decoder is
     Port (
-        -- Inputs from Program ROM and Datapath
-        instruction     : in  STD_LOGIC_VECTOR (11 downto 0); -- 12-bit instruction bus
-        reg_check_val   : in  STD_LOGIC_VECTOR (3 downto 0);  -- Register check for jump bus[cite: 1]
+        -- ---- Inputs ----
+        instruction   : in  STD_LOGIC_VECTOR (11 downto 0);  -- from Program ROM
+        reg_check_val : in  STD_LOGIC_VECTOR (3 downto 0);   -- value on mux_a output (used by JZR)
 
-        -- Outputs to Datapath Components
-        reg_en_sel      : out STD_LOGIC_VECTOR (2 downto 0);  -- Register enable to 3-to-8 decoder[cite: 1]
-        reg_write_en    : out STD_LOGIC;                      -- Custom signal to trigger write
-        load_sel        : out STD_LOGIC;                      -- Load select for 2-way 4-bit Mux[cite: 1]
-        imm_val         : out STD_LOGIC_VECTOR (3 downto 0);  -- 4-bit Immediate value[cite: 1]
-        mux_a_sel       : out STD_LOGIC_VECTOR (2 downto 0);  -- Register select (8-way Mux A)[cite: 1]
-        mux_b_sel       : out STD_LOGIC_VECTOR (2 downto 0);  -- Register select (8-way Mux B)[cite: 1]
-        add_sub_sel     : out STD_LOGIC;                      -- Add/Sub select for ALU[cite: 1]
-        jump_flag       : out STD_LOGIC;                      -- Jump Flag to PC Mux[cite: 1]
-        jump_addr       : out STD_LOGIC_VECTOR (2 downto 0)   -- Address to jump (+1 or d)[cite: 1]
+        -- ---- Outputs to the datapath ----
+        reg_en_sel    : out STD_LOGIC_VECTOR (2 downto 0);   -- target register address (3-to-8 dec input)
+        reg_write_en  : out STD_LOGIC;                        -- master write-enable for register bank
+        load_sel      : out STD_LOGIC;                        -- 2-way 4-bit data-bus mux: '1'=immediate, '0'=ALU
+        imm_val       : out STD_LOGIC_VECTOR (3 downto 0);   -- immediate value for MOVI
+        mux_a_sel     : out STD_LOGIC_VECTOR (2 downto 0);   -- 8-way 4-bit mux A select (ALU left input)
+        mux_b_sel     : out STD_LOGIC_VECTOR (2 downto 0);   -- 8-way 4-bit mux B select (ALU right input)
+        add_sub_sel   : out STD_LOGIC;                        -- ALU op: '0'=add, '1'=subtract
+        jump_flag     : out STD_LOGIC;                        -- '1' => PC <- jump_addr, else PC <- PC+1
+        jump_addr     : out STD_LOGIC_VECTOR (2 downto 0)    -- jump target (low 3 bits of d)
     );
 end instruction_decoder;
 
-architecture Behavioral of instruction_decoder is
+architecture Dataflow of instruction_decoder is
+
+    -- Convenient alias for the opcode
+    alias  op1     : STD_LOGIC is instruction(11);
+    alias  op0     : STD_LOGIC is instruction(10);
+
+    -- One-hot decode of the four opcodes (cost: 4 AND2, 2 NOT)
+    signal is_ADD  : STD_LOGIC;   -- opcode = 00
+    signal is_NEG  : STD_LOGIC;   -- opcode = 01
+    signal is_MOVI : STD_LOGIC;   -- opcode = 10
+    signal is_JZR  : STD_LOGIC;   -- opcode = 11
+
+    -- Zero detector for reg_check_val (cost: 1 NOR4)
+    signal r_is_zero : STD_LOGIC;
+
 begin
 
-    process(instruction, reg_check_val)
-        variable opcode : std_logic_vector(1 downto 0);
-    begin
-        -- Extract the primary 2-bit opcode[cite: 1]
-        opcode := instruction(11 downto 10);
+    ------------------------------------------------------------------
+    -- 1) Opcode one-hot decode
+    ------------------------------------------------------------------
+    is_ADD  <= (not op1) and (not op0);   -- 00
+    is_NEG  <= (not op1) and      op0;    -- 01
+    is_MOVI <=      op1  and (not op0);   -- 10
+    is_JZR  <=      op1  and      op0;    -- 11
 
-        -- 🔹 DEFAULT ASSIGNMENTS (Prevents Latches and sets safe idle states)
-        reg_en_sel   <= instruction(9 downto 7); -- Default targets R or Ra[cite: 1]
-        reg_write_en <= '0';
-        load_sel     <= '0';
-        imm_val      <= instruction(3 downto 0); -- Extract dddd bits[cite: 1]
-        mux_a_sel    <= instruction(9 downto 7); 
-        mux_b_sel    <= instruction(6 downto 4); 
-        add_sub_sel  <= '0';
-        jump_flag    <= '0';
-        jump_addr    <= instruction(2 downto 0); -- Extract ddd bits[cite: 1]
+    ------------------------------------------------------------------
+    -- 2) Pass-through fields (these are PURE WIRES - 0 gates)
+    --    For every writing instruction (MOVI/ADD/NEG) the destination
+    --    register is encoded in I(9..7).  For JZR, reg_write_en=0 so
+    --    the value of reg_en_sel is don't-care and we just pass I(9..7)
+    --    on, saving the muxes.
+    ------------------------------------------------------------------
+    reg_en_sel <= instruction(9 downto 7);   -- destination register
+    imm_val    <= instruction(3 downto 0);   -- d field for MOVI
+    jump_addr  <= instruction(2 downto 0);   -- d field for JZR (low 3 bits)
 
-        case opcode is
-            --------------------------------------------------
-            -- MOVI R, d (Format: 10 RRR 000 dddd)[cite: 1]
-            --------------------------------------------------
-            when "10" =>
-                reg_write_en <= '1';
-                load_sel     <= '1'; -- Direct immediate value d to register[cite: 1]
+    ------------------------------------------------------------------
+    -- 3) Single-bit control signals
+    ------------------------------------------------------------------
 
-            --------------------------------------------------
-            -- ADD Ra, Rb (Format: 00 RaRaRa RbRbRb 0000)[cite: 1]
-            --------------------------------------------------
-            when "00" =>
-                reg_write_en <= '1';
-                load_sel     <= '0'; -- Select 4-bit Add/Sub Unit output[cite: 1]
-                add_sub_sel  <= '0'; -- Set ALU to Addition[cite: 1]
+    -- Write-enable: HIGH for MOVI / ADD / NEG, LOW only for JZR.
+    --   reg_write_en = NOT(is_JZR) = NOT(op1 AND op0) = NAND(op1,op0)
+    -- Cost: 1 NAND2.
+    reg_write_en <= not is_JZR;
 
-            --------------------------------------------------
-            -- NEG R (Format: 01 RRR 000 0000)[cite: 1]
-            --------------------------------------------------
-            when "01" =>
-                reg_write_en <= '1';
-                load_sel     <= '0';
-                add_sub_sel  <= '1';     -- Set ALU to Subtraction[cite: 1]
-                mux_a_sel    <= "000";   -- Hardwire input A to R0 (which is 0)[cite: 1]
-                mux_b_sel    <= instruction(9 downto 7); -- Input B is register R[cite: 1]
+    -- Data-bus mux: choose the immediate field on a MOVI, otherwise
+    -- choose the ALU output.  Cost: same gate as is_MOVI (no extra cost).
+    load_sel <= is_MOVI;
 
-            --------------------------------------------------
-            -- JZR R, d (Format: 11 RRR 000 0ddd)[cite: 1]
-            --------------------------------------------------
-            when "11" =>
-                reg_write_en <= '0'; -- Ensure no register is written
-                mux_a_sel    <= instruction(9 downto 7); -- Route register R to check bus[cite: 1]
-                jump_addr    <= instruction(2 downto 0); -- Address d[cite: 1]
-                
-                -- If R == 0, jump flag triggers PC <- d[cite: 1]
-                if reg_check_val = "0000" then
-                    jump_flag <= '1'; 
-                else
-                    jump_flag <= '0'; -- Else PC <- PC + 1[cite: 1]
-                end if;
+    -- ALU operation: subtract for NEG, otherwise add.
+    -- For JZR we run an ADD (0 + R) so the ALU output equals R; this
+    -- value isn't written, but the zero-check uses it harmlessly.
+    -- Cost: same gate as is_NEG (no extra cost).
+    add_sub_sel <= is_NEG;
 
-            when others =>
-                null;
-        end case;
-    end process;
+    ------------------------------------------------------------------
+    -- 4) ALU operand selects (8-way 4-bit mux A and mux B)
+    --
+    -- Truth table (X = don't care):
+    --   Op    mux_a_sel       mux_b_sel       Why
+    --   ADD   I(9..7) = Ra    I(6..4) = Rb    Ra + Rb
+    --   NEG   "000"   = R0    I(9..7) = R     0 - R = -R   (R0 hardwired to 0)
+    --   MOVI  X                X               write path goes through immediate, ALU result discarded
+    --   JZR   I(9..7) = R     "000"  = R0     0 + R = R, then check zero
+    --
+    -- Optimisation:
+    --   * For MOVI bits 6..4 are always "000" by the instruction format,
+    --     so leaving mux_b_sel = I(6..4) on MOVI naturally gives "000".
+    --   * For JZR bits 6..4 are also always "000" by the format, so the
+    --     same wire delivers the desired R0 select on JZR for FREE.
+    --   => mux_b_sel needs to be I(6..4) for ADD/MOVI/JZR and I(9..7) for NEG only.
+    --      That is a single 2-way 3-bit mux controlled by is_NEG.
+    --
+    --   * For mux_a we need I(9..7) on every opcode EXCEPT NEG, where we
+    --     need "000".  That is a 3-bit AND with the inverted is_NEG line.
+    ------------------------------------------------------------------
 
-end Behavioral;
+    -- mux_a_sel = I(9..7) AND NOT(is_NEG)   (per bit)
+    -- Cost: 3 AND2 + 1 NOT (the NOT is shared across all three bits).
+    mux_a_sel(2) <= instruction(9) and (not is_NEG);
+    mux_a_sel(1) <= instruction(8) and (not is_NEG);
+    mux_a_sel(0) <= instruction(7) and (not is_NEG);
+
+    -- mux_b_sel = is_NEG ? I(9..7) : I(6..4)
+    -- Cost: 3 * (2 AND2 + 1 OR2) = 9 gates (NOT(is_NEG) shared with above).
+    mux_b_sel(2) <= (instruction(9) and is_NEG) or (instruction(6) and (not is_NEG));
+    mux_b_sel(1) <= (instruction(8) and is_NEG) or (instruction(5) and (not is_NEG));
+    mux_b_sel(0) <= (instruction(7) and is_NEG) or (instruction(4) and (not is_NEG));
+
+    ------------------------------------------------------------------
+    -- 5) Jump logic
+    --
+    -- jump_flag = is_JZR AND (reg_check_val == 0000)
+    -- The 4-bit zero detector is a single 4-input NOR.
+    -- Final AND merges it with is_JZR.   Cost: 1 NOR4 + 1 AND2.
+    ------------------------------------------------------------------
+    r_is_zero <= not (reg_check_val(3) or reg_check_val(2)
+                   or reg_check_val(1) or reg_check_val(0));
+
+    jump_flag <= is_JZR and r_is_zero;
+
+end Dataflow;
