@@ -1,39 +1,18 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 04/28/2026 09:02:30 AM
--- Design Name: 
--- Module Name: Reg - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
+-- Module : Reg
+-- Project: Nanoprocessor (Lab 9-10, CS1050)
+--
+-- Generic N-bit register built from N D flip-flops (one per bit).
+-- All flip-flops share the same Clk, En and Res lines.  Used both for
+-- the 4-bit registers in the Register Bank (N=4) and for the 3-bit
+-- Program Counter (N=3).
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity Reg is
-    generic(
+    generic (
         N : integer := 4
     );
     Port (
@@ -46,28 +25,21 @@ entity Reg is
 end Reg;
 
 architecture Behavioral of Reg is
-
-    component D_FF
-        Port (
-            D   : in STD_LOGIC;
-            Res : in STD_LOGIC;
-            En  : in STD_LOGIC;
-            Clk : in STD_LOGIC;
-            Q   : out STD_LOGIC
-        );
-    end component;
-
 begin
 
-    gen_ff: for i in 0 to N-1 generate
-        D_FF_Inst: D_FF
-            port map(
-                D   => D(i),
-                Res => Res,
-                En  => En,
-                Clk => Clk,
-                Q   => Q(i)
+    -- Direct entity instantiation (no component declaration needed).
+    -- Qbar of each D_FF is left open because the register output only
+    -- needs Q.
+    gen_ff : for i in 0 to N-1 generate
+        D_FF_Inst : entity work.D_FF
+            port map (
+                D    => D(i),
+                Res  => Res,
+                Clk  => Clk,
+                En   => En,
+                Q    => Q(i),
+                Qbar => open
             );
-    end generate;
+    end generate gen_ff;
 
 end Behavioral;
