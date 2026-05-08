@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
--- Module : Instruction_Decoder
+-- Module : instruction_decoder
 -- Project: Nanoprocessor (Lab 9-10, CS1050)
 -- Role   : "Brain Surgeon" - the control unit of the 4-bit nanoprocessor
 --
@@ -22,7 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity Instruction_Decoder is
+entity instruction_decoder is
     Port (
         -- ---- Inputs ----
         instruction   : in  STD_LOGIC_VECTOR (11 downto 0);  -- from Program ROM
@@ -39,9 +39,9 @@ entity Instruction_Decoder is
         jump_flag     : out STD_LOGIC;                        -- '1' => PC <- jump_addr, else PC <- PC+1
         jump_addr     : out STD_LOGIC_VECTOR (2 downto 0)    -- jump target (low 3 bits of d)
     );
-end Instruction_Decoder;
+end instruction_decoder;
 
-architecture Dataflow of Instruction_Decoder is
+architecture Dataflow of instruction_decoder is
 
     -- Convenient alias for the opcode
     alias  op1     : STD_LOGIC is instruction(11);
