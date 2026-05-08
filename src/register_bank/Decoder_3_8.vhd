@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
--- Module : Decoder_3_to_8
+-- Module : Decoder_3_8
 -- Project: Nanoprocessor (Lab 9-10, CS1050)
 --
 -- 3-to-8 one-hot decoder with active-high enable, built hierarchically
@@ -16,15 +16,15 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity Decoder_3_to_8 is
+entity Decoder_3_8 is
     Port (
         I  : in  STD_LOGIC_VECTOR(2 downto 0);
         EN : in  STD_LOGIC;
         Y  : out STD_LOGIC_VECTOR(7 downto 0)
     );
-end Decoder_3_to_8;
+end Decoder_3_8;
 
-architecture Behavioral of Decoder_3_to_8 is
+architecture Behavioral of Decoder_3_8 is
     signal Y_lo, Y_hi : STD_LOGIC_VECTOR(3 downto 0);
     signal EN_lo, EN_hi : STD_LOGIC;
 begin
