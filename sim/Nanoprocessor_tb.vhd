@@ -13,8 +13,8 @@
 --
 -- Expected outcome of the Step-4 program (sum 1..3):
 --   By slow-cycle 12, R7 = "0110" (decimal 6).
---   By slow-cycle 14, the PC is parked at address 7 in a self-loop
---   (JZR R0, 7) and R7 stays at "0110" forever.
+--   By slow-cycle 14, the PC is parked at address 6 in a self-loop
+--   and R7 stays at "0110" forever.
 ----------------------------------------------------------------------------------
 
 library IEEE;

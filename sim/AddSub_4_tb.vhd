@@ -14,11 +14,11 @@ end TB_AddSub_4;
 
 architecture Behavioral of TB_AddSub_4 is
     component Add_Sub_4_bit is
-        Port ( A_AS, B_AS : in STD_LOGIC_VECTOR(3 downto 0); CTRL : in STD_LOGIC; S_AS : out STD_LOGIC_VECTOR(3 downto 0); Zero, OverFlow, Carry_Out : out STD_LOGIC);
+        Port ( A_AS, B_AS : in STD_LOGIC_VECTOR(3 downto 0); CTRL : in STD_LOGIC; S_AS : out STD_LOGIC_VECTOR(3 downto 0); Zero, OverFlow : out STD_LOGIC);
     end component;
-    signal A_AS, B_AS, S_AS : STD_LOGIC_VECTOR(3 downto 0); signal CTRL, Zero, OverFlow, Carry_Out : STD_LOGIC;
+    signal A_AS, B_AS, S_AS : STD_LOGIC_VECTOR(3 downto 0); signal CTRL, Zero, OverFlow : STD_LOGIC;
 begin
-    UUT: Add_Sub_4_bit port map( A_AS => A_AS, B_AS => B_AS, CTRL => CTRL, S_AS => S_AS, Zero => Zero, OverFlow => OverFlow, Carry_Out => Carry_Out );
+    UUT: Add_Sub_4_bit port map( A_AS => A_AS, B_AS => B_AS, CTRL => CTRL, S_AS => S_AS, Zero => Zero, OverFlow => OverFlow );
     process
     begin
         -- Index Number: 240047N

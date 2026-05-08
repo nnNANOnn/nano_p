@@ -13,12 +13,12 @@ entity TB_Mux_8_to_1 is
 end TB_Mux_8_to_1;
 
 architecture Behavioral of TB_Mux_8_to_1 is
-    component Mux_8_1 is
+    component Mux_8_to_1 is
         Port ( S : in STD_LOGIC_VECTOR(2 downto 0); D : in STD_LOGIC_VECTOR(7 downto 0); EN : in STD_LOGIC; Y : out STD_LOGIC);
     end component;
     signal S : STD_LOGIC_VECTOR(2 downto 0); signal D : STD_LOGIC_VECTOR(7 downto 0); signal EN, Y : STD_LOGIC;
 begin
-    UUT: Mux_8_1 port map( S => S, D => D, EN => EN, Y => Y );
+    UUT: Mux_8_to_1 port map( S => S, D => D, EN => EN, Y => Y );
     process
     begin
         -- Index Number: 240045G
